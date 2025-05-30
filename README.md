@@ -1,43 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vector Notes
+Originally started as a ticketing app, this project evolved into a simple note-taking app focused on exploring semantic relationships between notes. 
+
+Vector Notes uses OpenAI embedding APIs to generate vector representations of notes, which are then stored in SingleStore for fast semantic search and similarity features.
+
+## Does
+
+- CRUD
+- Semantic search using OpenAI embedding endpoints
+- Shows semantically similar notes 
+
+## Uses
+
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS
+- OpenAI Embeddings API
+- SingleStore (vector database)
 
 ## Getting Started
 
-First, run the development server:
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/YOUR_USERNAME/vector-notes.git
+   cd vector-notes
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2. **Install dependencies:**
+   ```sh
+   npm install
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. **Set up environment variables:**
+   - Create an .env file with these variables:
+    - `OPENAI_API_KEY` – Your OpenAI API key for embeddings
+    - `SINGLESTORE_HOST`, `SINGLESTORE_PASSWORD` – Your SingleStore connection details
 
+4. **Run the development server:**
+   ```sh
+   npm run dev
+   ```
 
-Things to consider: 
+5. **Open [http://localhost:3000](http://localhost:3000) in your browser.**
 
-BE-DB
-- Having a customer entry and grouping them with companies
-- Auth
-- Mapping auth users with authors
-- Pushing filter parameters to the URL
-- Create a new thread
-- Notes pagination
-- what to do with unlinked labels?
-- Creating a new thread
-- CRUD on messages
-- How to delete labels
+    Enjoy!
 
-FE-UI-UX
-- Clickable badges with active states - not checkboxes with it
-- Using tailwind color variables in scss
-- Using dark: color variables to have automatic dark mode
-- Notes pagination
-- Modal view for the note detail as well as the page
-- Loaders
-- Error messages 
-- Text ellipsis check app wide
-- Accepting markdown on description
+## License
+
+MIT
