@@ -1,0 +1,10 @@
+// @use "sass:meta";
+// Import Tailwind directives
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// Force dark background
+html, body {
+  background-color: #0f172a !important;
+}
