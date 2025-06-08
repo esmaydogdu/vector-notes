@@ -14,6 +14,7 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
   const [editedNote, setEditedNote] = useState<Partial<Note>>({});
   const [similarNotes, setSimilarNotes] = useState([] as Note[]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [hash, setHash] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -25,9 +26,8 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
         if (!response.ok) throw new Error('Failed to fetch note');
         const data = await response.json();
         console.log('>>> data from get note', data);
-
-        // TODO: also prepare similiar notes here.
-
+        
+        setHash(data.note.hash)
         setNote(data.note);
         setEditedNote(data.note);
         setSimilarNotes(data.similarNotes);
@@ -94,7 +94,7 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 p-6">
+    <div className="min-h-screen bg-gray-900 text-gray-200 p-6" style={hash ? { backgroundColor: `#${hash.slice(0, 6)}`} : {}}>
       <div className="max-w-4xl mx-auto">
         <button
           onClick={handleBack}

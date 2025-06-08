@@ -8,6 +8,7 @@ export interface Note {
   createdAt: string;
   updatedAt?: string; 
   score?: number;
+  hash?: string
 }
 
 export interface SearchFilter {

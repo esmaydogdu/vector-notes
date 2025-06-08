@@ -1,6 +1,12 @@
 import { singlestore } from '@/db/singlestore';
 import { getEmbedding } from '@/utils/embeddings';
+import { createHash } from 'crypto'
 
+const vectorToHash = (vector: number[]): string => {
+  const hash = createHash("md5").update(JSON.stringify(vector)).digest("hex")
+
+  return `#${hash.slice(0, 6)}`
+}
 
 // Create note
 export async function POST(request: Request) {
@@ -94,10 +100,14 @@ export async function GET(request: Request) {
         `,
         [JSON.stringify(embedding), noteId]
       );
+      console.log('>> embedding', embedding)
+      const hash = createHash("md5").update(JSON.stringify(embedding)).digest("hex");
+      console.log('>>> hash', hash)
+      
 
       console.log('>>> Similar notes:', similarNotes);
 
-      return new Response(JSON.stringify({ note, similarNotes }), { status: 200 });
+      return new Response(JSON.stringify({ note: {...note, hash}, similarNotes }), { status: 200 });
     }
 
     if (!query) {
