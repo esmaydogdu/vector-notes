@@ -9,6 +9,7 @@ export interface Note {
   updatedAt?: string; 
   score?: number;
   hash?: string
+  group: 'language' | 'random'
 }
 
 export interface SearchFilter {

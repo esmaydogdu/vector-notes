@@ -25,7 +25,6 @@ export const NoteProvider = ({ children, searchFilter }: NoteProviderProps) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [errorNotes, setErrorNotes] = useState('');
   const [isLoadingNotes, setIsLoadingNotes] = useState(true);
-  // general loader
   const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const previousPathRef = useRef(pathname);
@@ -70,8 +69,8 @@ export const NoteProvider = ({ children, searchFilter }: NoteProviderProps) => {
         body: JSON.stringify(noteData),
       });
       if (!response.ok) throw new Error("Failed to create note");
-      setIsLoading(false);
       await fetchNotes();
+      setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
       console.error("Error creating note:", error);
@@ -107,11 +106,6 @@ export const NoteProvider = ({ children, searchFilter }: NoteProviderProps) => {
       console.error("Error deleting note:", error);
     }
   };
-
-  // Initial labels fetch
-  // useEffect(() => {
-  //   fetchLabels();
-  // }, []);
 
   // Fetch notes when filters change
   useEffect(() => {

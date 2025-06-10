@@ -5,16 +5,23 @@ import { Note } from '@/types';
 import { use } from 'react';
 import { Loader, Modal, NoteCard } from '@/components';
 
+const GROUP_OPTIONS = [
+  { value: "random", label: "Random" },
+  { value: "language", label: "Language" },
+];
+
 export default function NoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unpackedParams = use(params);
   const id = unpackedParams.id;
   const [note, setNote] = useState<Note | null>(null);
+  const [group, setGroup]= useState('random');
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedNote, setEditedNote] = useState<Partial<Note>>({});
   const [similarNotes, setSimilarNotes] = useState([] as Note[]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [hash, setHash] = useState(false);
+  const [symmetricColor, setSymmetricColor] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -23,11 +30,11 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
       try {
         setIsLoading(true);
         const response = await fetch(`/api/notes?noteId=${id}`);
-        if (!response.ok) throw new Error('Failed to fetch note');
+        if (!response.ok) throw new Error('Error fetching note');
         const data = await response.json();
-        console.log('>>> data from get note', data);
-        
+        setGroup(data.note.group)
         setHash(data.note.hash)
+        setSymmetricColor(data.note.symmetricColor)
         setNote(data.note);
         setEditedNote(data.note);
         setSimilarNotes(data.similarNotes);
@@ -94,7 +101,10 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 p-6" style={hash ? { backgroundColor: `#${hash.slice(0, 6)}`} : {}}>
+    <div
+      className="min-h-screen text-gray-200 p-6"
+      style={note?.hash ? { backgroundColor: `#${note.hash.slice(0, 6)}` } : {}}
+    >
       <div className="max-w-4xl mx-auto">
         <button
           onClick={handleBack}
@@ -186,7 +196,7 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
                 <h3 className="text-lg font-semibold">From:</h3>
                 <span className="text-gray-300 pl-1">{note.customer}</span>
               </div>
-
+              <div className="text-white">{group}</div>
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2">Description</h3>
                 {isEditing ? (
@@ -199,6 +209,23 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
                 ) : (
                   <p className="text-gray-300">{note.description || 'No description provided.'}</p>
                 )}
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="group" className="block text-sm font-medium text-gray-300 mb-1">
+                  Group
+                </label>
+                <select
+                  id="group"
+                  value={editedNote.group || "random"}
+                  onChange={e => setEditedNote({ ...editedNote, group: e.target.value })}
+                  className="bg-gray-800 border border-gray-600 text-white rounded px-3 py-2"
+                  disabled={!isEditing}
+                >
+                  {GROUP_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
             { similarNotes.length > 0 && (

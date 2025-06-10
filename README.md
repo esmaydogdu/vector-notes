@@ -8,6 +8,7 @@ Vector Notes uses OpenAI embedding APIs to generate vector representations of no
 - CRUD
 - Semantic search using OpenAI embedding endpoints
 - Shows semantically similar notes 
+- Supports category separation for notes
 
 ## Uses
 
