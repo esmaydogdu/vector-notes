@@ -8,8 +8,8 @@ export interface Note {
   createdAt: string;
   updatedAt?: string; 
   score?: number;
-  hash?: string
-  group: 'language' | 'random'
+  hash?: string;
+  group: 'language' | 'random';
 }
 
 export interface SearchFilter {

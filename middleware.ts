@@ -1,15 +1,10 @@
-import { NextResponse } from 'next/server';
+import { authkitMiddleware } from '@workos-inc/authkit-nextjs';
 
-export function middleware() {
-  const response = NextResponse.next();
-  
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self'");
-  
-  return response;
-}
+export default authkitMiddleware({
+  middlewareAuth: {
+    enabled: true,
+    unauthenticatedPaths: ['/'],
+  },
+});
 
-export const config = {
-  matcher: '/api/:path*',
-};
+export const config = { matcher: ['/','/callback', '/api/notes', '/account/:page*'] };

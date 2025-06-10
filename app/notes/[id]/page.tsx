@@ -21,7 +21,7 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
   const [similarNotes, setSimilarNotes] = useState([] as Note[]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [hash, setHash] = useState(false);
-  const [symmetricColor, setSymmetricColor] = useState(false);
+  // const [symmetricColor, setSymmetricColor] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -32,9 +32,15 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
         const response = await fetch(`/api/notes?noteId=${id}`);
         if (!response.ok) throw new Error('Error fetching note');
         const data = await response.json();
-        setGroup(data.note.group)
-        setHash(data.note.hash)
-        setSymmetricColor(data.note.symmetricColor)
+        console.log("Fetched note data:", data);
+        if (!data.note) {
+          // setError("Note not found or you do not have access.");
+          setIsLoading(false);
+          return;
+        }
+        setGroup(data.note.group);
+        setHash(data.note.hash);
+        // setSymmetricColor(data.note.symmetricColor);
         setNote(data.note);
         setEditedNote(data.note);
         setSimilarNotes(data.similarNotes);
@@ -103,7 +109,7 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
   return (
     <div
       className="min-h-screen text-gray-200 p-6"
-      style={note?.hash ? { backgroundColor: `#${note.hash.slice(0, 6)}` } : {}}
+      style={note?.hash ? { backgroundColor: `#${hash.slice(0, 6)}` } : {}}
     >
       <div className="max-w-4xl mx-auto">
         <button
@@ -193,10 +199,9 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
               <div className="mb-6 flex items-baseline">
-                <h3 className="text-lg font-semibold">From:</h3>
-                <span className="text-gray-300 pl-1">{note.customer}</span>
+                <h3 className="text-lg font-semibold">Group:</h3>
+                <span className="text-gray-300 pl-1">{group}</span>
               </div>
-              <div className="text-white">{group}</div>
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2">Description</h3>
                 {isEditing ? (
