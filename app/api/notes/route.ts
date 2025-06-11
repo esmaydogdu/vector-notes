@@ -1,6 +1,7 @@
 import { singlestore } from '@/db/singlestore';
 import { getEmbedding } from '@/utils/embeddings';
 import { withAuth } from "@workos-inc/authkit-nextjs";
+import { Buffer } from 'buffer';
 
 const vectorToSymmetricColor = (vector: number[]): string => {
   // Split into 3 chunks
@@ -15,6 +16,27 @@ const vectorToSymmetricColor = (vector: number[]): string => {
   });
   return `#${rgb.map(x => x.toString(16).padStart(2, '0')).join('')}`;
 }
+const bufferToVector = (buffer: Buffer): number[] => {
+  // Use Buffer's built-in methods to read floats, which handles alignment
+  const floats: number[] = [];
+  for (let i = 0; i < buffer.length; i += 4) {
+    floats.push(buffer.readFloatLE(i));
+  }
+  return floats;
+};
+const hashColor = async (embedding: number[]): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(JSON.stringify(embedding));
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    return hash
+}
+
+const prepareInput = (title: string, description: string): string => {
+  return  `${title.trim()} ${description.trim()}`
+}
 
 // Create note
 export async function POST(request: Request) {
@@ -24,7 +46,9 @@ export async function POST(request: Request) {
     if (!title || !description) {
       return new Response('Title and description are required fields', { status: 400 });
     }
-    const embedding = await getEmbedding(`${description || ""}`);
+
+    const embedInput = prepareInput(title, description)
+    const embedding = await getEmbedding(embedInput);
     const embeddingJson = JSON.stringify(embedding); 
 
     const { user } = await withAuth();
@@ -63,7 +87,11 @@ export async function POST(request: Request) {
       [JSON.stringify(embedding), insertId]
     );
 
-    return new Response(JSON.stringify({note: { ...rows[0] }, similarNotes }), { status: 201 });
+
+    const hash = await hashColor(embedding)
+    const symmetricColor = vectorToSymmetricColor(embedding);
+
+    return new Response(JSON.stringify({note: { ...rows[0], hash, symmetricColor }, similarNotes }), { status: 201 });
   } catch (error: any) {
     console.log('>> error', error)
     return new Response(error.message || 'Error creating note', { status: 500 });
@@ -88,7 +116,14 @@ export async function GET(request: Request) {
         `SELECT * FROM notes WHERE id = ? AND user_id = ?`,
         [noteId, userId]
       );
+
+      // const [noterow] = await singlestore.execute(
+      //   `SELECT *, JSON_UNQUOTE(JSON_EXTRACT(vector, '$')) as vector_str FROM notes WHERE id = ? AND user_id = ?`,
+      //   [noteId, userId]
+      // );
       const note = noterow?.[0];
+
+      console.log('>>> what is note? baby dont hurt me', note)
       if (!note) {
         return new Response(
           JSON.stringify({ error: "Note not found" }),
@@ -97,7 +132,8 @@ export async function GET(request: Request) {
       }
 
       // Fetch similar notes for the existing note
-      const embedding = await getEmbedding(`${note.title} ${note.description || ""}`);
+      
+      const embedding = bufferToVector(note.vector)
       const [similarNotes] = await singlestore.execute(
         `SELECT 
             id,
@@ -113,13 +149,7 @@ export async function GET(request: Request) {
         [JSON.stringify(embedding), noteId, userId]
       );
 
-      // Optionally, add hash and symmetricColor if needed
-      // Use Web Crypto API for hashing
-      const encoder = new TextEncoder();
-      const data = encoder.encode(JSON.stringify(embedding));
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      const hash = await hashColor(embedding)
       const symmetricColor = vectorToSymmetricColor(embedding);
 
       return new Response(
@@ -189,13 +219,24 @@ export async function PATCH(request: Request) {
 
     let setClause = Object.keys(updateData).map(key => `\`${key}\` = ?`).join(', ');
     const values = Object.values(updateData);
-
     // If description is updated, update embedding as well
-    if (description?.trim()) {
-      const embedding = await getEmbedding(description);
+
+    if (title?.trim() || description?.trim()) {
+      // Use the updated title/description, or fallback to existing values if not provided
+      const [existingRow] = await singlestore.execute(
+        `SELECT title, description FROM notes WHERE id = ? AND user_id = ?`,
+        [noteId, userId]
+      );
+      const existing = existingRow?.[0] || {};
+      const newTitle = title?.trim() ?? existing.title;
+      const newDescription = description?.trim() ?? existing.description;
+      const embedInput = prepareInput(newTitle, newDescription)
+      const embedding = await getEmbedding(embedInput);
       setClause += setClause ? ', vector = JSON_ARRAY_PACK(?)' : 'vector = JSON_ARRAY_PACK(?)';
       values.push(JSON.stringify(embedding));
     }
+
+    // const hash = await hashColor(embedding)
 
     // Add noteId and userId to the end of the values array
     values.push(noteId, userId);

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Note } from '@/types';
 import { use } from 'react';
 import { Loader, Modal, NoteCard } from '@/components';
+import { useNotes } from "@/context/NoteContext";
 
 const GROUP_OPTIONS = [
   { value: "random", label: "Random" },
@@ -13,6 +14,7 @@ const GROUP_OPTIONS = [
 export default function NoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unpackedParams = use(params);
   const id = unpackedParams.id;
+  const { fetchNoteById } = useNotes();
   const [note, setNote] = useState<Note | null>(null);
   const [group, setGroup]= useState('random');
   const [isLoading, setIsLoading] = useState(true);
@@ -24,33 +26,30 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
   // const [symmetricColor, setSymmetricColor] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-
-    const fetchNote = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch(`/api/notes?noteId=${id}`);
-        if (!response.ok) throw new Error('Error fetching note');
-        const data = await response.json();
-        console.log("Fetched note data:", data);
-        if (!data.note) {
-          // setError("Note not found or you do not have access.");
-          setIsLoading(false);
-          return;
-        }
-        setGroup(data.note.group);
-        setHash(data.note.hash);
-        // setSymmetricColor(data.note.symmetricColor);
-        setNote(data.note);
-        setEditedNote(data.note);
-        setSimilarNotes(data.similarNotes);
-      } catch (error) {
-        console.error('Error fetching note:', error);
-      } finally {
+  const fetchNote = async () => {
+    try {
+      setIsLoading(true);
+      const data = await fetchNoteById(id)
+      console.log("Fetched note data:", data);
+      if (!data.note) {
+        // setError("Note not found or you do not have access.");
         setIsLoading(false);
+        return;
       }
-    };
+      setGroup(data.note.group);
+      setHash(data.note.hash);
+      // setSymmetricColor(data.note.symmetricColor);
+      setNote(data.note);
+      setEditedNote(data.note);
+      setSimilarNotes(data.similarNotes);
+    } catch (error) {
+      console.error('Error fetching note:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchNote();
   }, [id]);
 
@@ -85,6 +84,7 @@ export default function NoteDetailPage({ params }: { params: Promise<{ id: strin
         setNote({ ...note, ...editedNote });
       }
       setIsEditing(false);
+      await fetchNote();
     } catch (error) {
       console.error('Error updating note:', error);
     }
