@@ -1,10 +1,19 @@
 "use client"
+import { useEffect } from "react";
 import { useNotes } from "../context/NoteContext";
 import { NoteCard } from "./NoteCard";
 import { Loader } from "@/components/atoms/Loader";
 
 export function NoteList() {
-  const { notes, isLoadingNotes, errorNotes } = useNotes();
+  const { notes, isLoadingNotes, errorNotes, fetchNotes } = useNotes();
+  useEffect(() => {
+    if (fetchNotes) {
+      async function fetchData() {
+          await fetchNotes()
+        }
+        fetchData();
+    }
+  }, []); 
 
   return (
     <div className="h-[calc(100vh-138px)] md:h-[calc(100vh-138px)] lg:h-[calc(100vh-92px)] overflow-hidden flex flex-col">
