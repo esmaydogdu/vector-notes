@@ -2,50 +2,34 @@
 import { useFilters } from "@/context/FilterContext";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-// interface SearchFilterProps {
-//   toggleSidebar: () => void;
-//   isSidebarOpen: boolean;
-// }
+import { useRouter, useSearchParams } from "next/navigation";
 
 export function HeaderFilters() {
   const [inputValue, setInputValue] = useState<string>("");
-  const { searchFilter, updateSearchFilter } = useFilters();
-  // const [sort, setSort] = useState<'date_asc' | 'date_desc'>('date_desc');
+  const { updateSearchFilter } = useFilters();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // const sortOptions = [
-  //   { value: 'date_desc', label: 'Date (Newest first)' },
-  //   { value: 'date_asc', label: 'Date (Oldest first)' },
-  // ];
-
-  // const handleSort = (value: string) => {
-  //   // setSort(value as 'date_asc' | 'date_desc');
-  //   updateSearchFilter({ 
-  //     ...searchFilter,
-  //     // sort: value 
-  //   });
-  // };
-
-  // Init filter values from context
   useEffect(() => {
-    if (searchFilter.query) {
-      setInputValue(searchFilter.query);
-    }
-  }, [searchFilter.query]);
+    const urlQuery = searchParams.get("query") || "";
+    setInputValue(urlQuery);
+    updateSearchFilter({ query: urlQuery });
+  }, [searchParams, updateSearchFilter]);
+
 
   const handleSearch = () => {
-    updateSearchFilter({ query: inputValue });
+    const params = new URLSearchParams(searchParams.toString());
+    if (inputValue) {
+      params.set("query", inputValue);
+    } else {
+      params.delete("query");
+    }
+    router.replace(`/${params.toString() ? "?" + params.toString() : ""}`);
   };
 
   return (
     <div className="flex w-full items-center justify-center">
       <div className="flex items-center">
-          {/* <div className="w-[200px] self-end mr-4">
-            <Dropdown
-              options={sortOptions}
-              value={sort}
-              onChange={handleSort}
-            />
-        </div> */}
         <div className="flex-1 flex flex-row mr-4">
           <input
             type="text"

@@ -27,6 +27,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
 
   const updateSearchFilter = (updatedFields: Partial<SearchFilter>) => {
     setSearchFilter((prevState) => {
+      console.log('>>> xoxo setting filters', searchFilter)
       const newFilter = { ...prevState, ...updatedFields };
       
       if (JSON.stringify(prevState) === JSON.stringify(newFilter)) {
@@ -36,6 +37,7 @@ export const FilterProvider = ({ children }: FilterProviderProps) => {
     });
   };
 
+  
   useEffect(() => {
     const params = new URLSearchParams();
     Object.entries(searchFilter).forEach(([key, value]) => {
